@@ -16,6 +16,7 @@ export default function AdminUsersPage() {
     password: '',
     department: '',
     studentId: '',
+    idCardNumber: '',
   })
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export default function AdminUsersPage() {
       password: '',
       department: user.department || '',
       studentId: user.studentId || '',
+      idCardNumber: user.idCardNumber || '',
     })
     setShowEditModal(true)
   }
@@ -83,6 +85,7 @@ export default function AdminUsersPage() {
       if (editingUser.role === 'STUDENT') {
         if (formData.department) updateData.department = formData.department
         if (formData.studentId) updateData.studentId = formData.studentId
+        updateData.idCardNumber = formData.idCardNumber
       }
 
       const res = await fetch(`/api/admin/users/${editingUser.id}`, {
@@ -94,7 +97,14 @@ export default function AdminUsersPage() {
       if (res.ok) {
         setShowEditModal(false)
         setEditingUser(null)
-        setFormData({ name: '', email: '', password: '', department: '', studentId: '' })
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          department: '',
+          studentId: '',
+          idCardNumber: '',
+        })
         fetchUsers()
       } else {
         const error = await res.json()
@@ -249,6 +259,22 @@ export default function AdminUsersPage() {
                       />
                     </div>
                     <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">RFID / ID Card UID</label>
+                      <input
+                        type="text"
+                        value={formData.idCardNumber}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            idCardNumber: e.target.value.replace(/\s+/g, '').toUpperCase(),
+                          })
+                        }
+                        placeholder="e.g. D672F500"
+                        className="w-full px-4 py-2 bg-black/50 border border-white/10 rounded-lg text-white focus:outline-none focus:border-green-400/50"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Leave blank to clear the stored UID.</p>
+                    </div>
+                    <div>
                       <label className="block text-sm font-medium text-gray-400 mb-2">Department</label>
                       <input
                         type="text"
@@ -274,7 +300,14 @@ export default function AdminUsersPage() {
                     onClick={() => {
                       setShowEditModal(false)
                       setEditingUser(null)
-                      setFormData({ name: '', email: '', password: '', department: '', studentId: '' })
+                      setFormData({
+                        name: '',
+                        email: '',
+                        password: '',
+                        department: '',
+                        studentId: '',
+                        idCardNumber: '',
+                      })
                     }}
                     className="flex-1 px-4 py-2 border border-white/20 rounded-lg text-white hover:bg-white/10 transition-colors"
                   >

@@ -10,6 +10,7 @@ const updateUserSchema = z.object({
   password: z.string().min(6).optional(),
   department: z.string().optional(),
   studentId: z.string().optional(),
+  idCardNumber: z.union([z.string(), z.null()]).optional(),
 })
 
 export async function PUT(
@@ -42,6 +43,33 @@ export async function PUT(
     }
 
     const updateData: any = { ...data }
+
+    if (typeof data.idCardNumber !== 'undefined') {
+      if (data.idCardNumber === null) {
+        updateData.idCardNumber = null
+      } else {
+        const normalized = data.idCardNumber.replace(/\s+/g, '').trim()
+        if (normalized === '') {
+          updateData.idCardNumber = null
+        } else {
+          const formatted = normalized.toUpperCase()
+          const existing = await prisma.student.findFirst({
+            where: {
+              idCardNumber: formatted,
+              id: { not: params.id },
+            },
+            select: { id: true },
+          })
+          if (existing) {
+            return NextResponse.json(
+              { error: 'ID card already assigned to another student' },
+              { status: 409 }
+            )
+          }
+          updateData.idCardNumber = formatted
+        }
+      }
+    }
     if (data.password) {
       updateData.password = await hashPassword(data.password)
     }

@@ -11,8 +11,29 @@ This system solves the problem faced by students like Piyal Chakraborty who lose
 - **Complete Audit Trail**: All meal records tracked
 - **Hardware Integration Ready**: RESTful APIs for IoT devices
 
+## 🧱 System Highlights
+
+- **360° Verification Pipeline**: Face recognition (InsightFace), RFID/ID card, PIN, and manual fallbacks keep the flow resilient.
+- **IoT-Native Backend**: Next.js App Router APIs optimized for ESP32-CAM/RFID nodes with low-latency JSON responses.
+- **Manager-in-the-Loop**: Real-time approval queue prevents double-serving while maintaining throughput KPIs.
+- **Operations Ready**: Dedicated SETUP, API, MongoDB, and Verification guides for hand-off to infrastructure teams.
+- **Security First**: JWT + role-based access, bcrypt hashing, Atlas network policies, and audit-grade logging.
+
+## 🗂 Documentation Map
+
+| Audience | File | Summary |
+| --- | --- | --- |
+| New contributors | `README.md` (this file) | Quick mental model, setup checklist, key workflows |
+| Engineers & integrators | [`DOCUMENTATION.md`](DOCUMENTATION.md) | Deep dive: architecture, flows, deployment, hardware, ops |
+| Backend/API teams | [`API_DOCUMENTATION.md`](API_DOCUMENTATION.md) | Full REST reference with payloads |
+| Infra & DB admins | [`MONGODB_SETUP.md`](MONGODB_SETUP.md) | Atlas provisioning, users, network rules |
+| Field deployment | [`SETUP.md`](SETUP.md) | Step-by-step environment and hardware bring-up |
+| QA & audit | [`SOFTWARE_STATUS.md`](SOFTWARE_STATUS.md), [`SOFTWARE_VERIFICATION.md`](SOFTWARE_VERIFICATION.md) | Current release state, verification evidence |
+
 ## 📋 Table of Contents
 
+- [System Highlights](#-system-highlights)
+- [Documentation Map](#-documentation-map)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [MongoDB Atlas Configuration](#mongodb-atlas-configuration)
