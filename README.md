@@ -1140,6 +1140,33 @@ Power: 5V via USB or External Supply
 WiFi: BDSET Network (2.4GHz)
 ```
 
+### RFID Integration (ESP32-CAM + MFRC522 + OLED)
+
+**Hardware Components:**
+- ESP32-CAM (AI-Thinker)
+- MFRC522 RFID Reader
+- SSD1306 OLED Display (0.96" 128x64, I2C)
+
+**Wiring:**
+- **MFRC522:** GPIO 14 (SCK), GPIO 12 (MISO), GPIO 13 (MOSI), GPIO 15 (SS), GPIO 2 (RST)
+- **SSD1306:** GPIO 4 (SDA), GPIO 0 (SCL), I2C address 0x3C
+- **Power:** 3.3V and GND shared
+
+**Code:** `hardware/esp32_cam_rfid_oled_api.ino`
+
+**Workflow:**
+1. Student presents RFID card
+2. ESP32 reads UID (e.g., "D6 72 F5 00")
+3. Normalizes to "D672F500" (removes spaces, uppercases)
+4. Calls `POST /api/hardware/verify` with `method: "ID_CARD"`
+5. Displays student profile on OLED (name, ID, eligibility)
+
+**Admin Setup:**
+- Navigate to Admin → Users
+- Edit student record
+- Enter RFID UID in "RFID / ID Card UID" field
+- System validates and saves to database
+
 ### Face Recognition Service
 
 Run the Python face recognition service on your PC/server:
