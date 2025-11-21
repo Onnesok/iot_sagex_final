@@ -34,6 +34,7 @@ This system solves the problem faced by students like Piyal Chakraborty who lose
 
 - [System Highlights](#-system-highlights)
 - [Documentation Map](#-documentation-map)
+- [Step-by-Step Local Execution Guide](#-step-by-step-local-execution-guide)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [MongoDB Atlas Configuration](#mongodb-atlas-configuration)
@@ -47,6 +48,285 @@ This system solves the problem faced by students like Piyal Chakraborty who lose
 - [Project Structure](#project-structure)
 - [Troubleshooting](#troubleshooting)
 - [Security Notes](#security-notes)
+
+## 🚀 Step-by-Step Local Execution Guide
+
+Follow these steps to run the IoT Tokenless Dining Management System on your local machine:
+
+### Step 1: Verify Prerequisites
+
+Before starting, ensure you have the following installed:
+
+- **Node.js** 18 or higher ([Download here](https://nodejs.org/))
+- **npm** (comes with Node.js) or **yarn** package manager
+- **MongoDB Atlas** account ([Sign up for free](https://www.mongodb.com/cloud/atlas/register))
+- **Git** (optional, for cloning the repository)
+
+**Verify installations:**
+```bash
+node --version    # Should show v18.x.x or higher
+npm --version     # Should show 9.x.x or higher
+```
+
+### Step 2: Clone or Download the Repository
+
+**Option A: Using Git (Recommended)**
+```bash
+git clone <repository-url>
+cd iot_sagex
+```
+
+**Option B: Download ZIP**
+1. Download the project as a ZIP file
+2. Extract it to your desired location
+3. Open terminal/command prompt in the extracted folder
+
+### Step 3: Install Project Dependencies
+
+Navigate to the project directory and install all required packages:
+
+```bash
+npm install
+```
+
+**Expected output:** This will install all dependencies listed in `package.json`. Wait for the process to complete (may take 2-5 minutes).
+
+**Troubleshooting:**
+- If you encounter errors, try: `npm cache clean --force` then `npm install` again
+- On Windows, you may need to run as Administrator if permission errors occur
+
+### Step 4: Set Up MongoDB Atlas Database
+
+1. **Create MongoDB Atlas Account** (if you don't have one):
+   - Go to [https://www.mongodb.com/cloud/atlas/register](https://www.mongodb.com/cloud/atlas/register)
+   - Sign up for a free account
+   - Verify your email
+
+2. **Create a New Cluster**:
+   - After logging in, click "Build a Database"
+   - Choose the FREE tier (M0)
+   - Select your preferred cloud provider and region
+   - Click "Create Cluster" (takes 3-5 minutes)
+
+3. **Create Database User**:
+   - Go to "Database Access" in the left sidebar
+   - Click "Add New Database User"
+   - Choose "Password" authentication
+   - Enter a username (e.g., `dining_admin`)
+   - Generate a secure password (save it!)
+   - Set privileges to "Atlas admin" or "Read and write to any database"
+   - Click "Add User"
+
+4. **Configure Network Access**:
+   - Go to "Network Access" in the left sidebar
+   - Click "Add IP Address"
+   - For development, click "Allow Access from Anywhere" (0.0.0.0/0)
+   - Click "Confirm"
+   - **Note:** For production, restrict to specific IPs
+
+5. **Get Connection String**:
+   - Go to "Database" → "Connect"
+   - Choose "Connect your application"
+   - Select "Node.js" and version "5.5 or later"
+   - Copy the connection string (looks like: `mongodb+srv://username:password@cluster.mongodb.net/`)
+   - Replace `<password>` with your actual database user password
+   - Replace `<dbname>` with `iot_dining`
+
+### Step 5: Create Environment Configuration File
+
+1. **Create `.env` file** in the project root directory:
+   ```bash
+   # Windows (Command Prompt)
+   type nul > .env
+   
+   # Windows (PowerShell)
+   New-Item -Path .env -ItemType File
+   
+   # Mac/Linux
+   touch .env
+   ```
+
+2. **Add the following content to `.env`**:
+   ```env
+   # MongoDB Atlas Connection String
+   # Replace with your actual connection string from Step 4
+   DATABASE_URL="mongodb+srv://your_username:your_password@your_cluster.mongodb.net/iot_dining?retryWrites=true&w=majority"
+
+   # JWT Secret Key (Generate a secure random string)
+   # Use the command below to generate one, or use an online generator
+   JWT_SECRET="your-super-secret-jwt-key-minimum-32-characters-long-change-in-production"
+   ```
+
+3. **Generate a Secure JWT Secret**:
+   ```bash
+   # Using Node.js
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+   Copy the output and paste it as your `JWT_SECRET` value.
+
+### Step 6: Initialize Database Schema
+
+Generate Prisma Client and push the schema to MongoDB:
+
+```bash
+# Generate Prisma Client
+npx prisma generate
+
+# Push schema to MongoDB (creates all collections)
+npx prisma db push
+```
+
+**Expected output:**
+- `Prisma Client generated` message
+- Database schema pushed successfully
+- Collections created: `Student`, `Admin`, `Manager`, `Token`, `MealPlan`, `Enrollment`, `MealRecord`, `SystemConfig`
+
+**Verify database connection:**
+```bash
+# Open Prisma Studio to view your database
+npx prisma studio
+```
+This opens a web interface at `http://localhost:5555` where you can view and edit database records.
+
+### Step 7: Create Initial Admin Account
+
+You need at least one admin account to manage the system. Choose one method:
+
+**Method 1: Using API (Recommended)**
+```bash
+# Start the development server first (see Step 8)
+# Then in a new terminal, run:
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"admin@cuet.ac.bd\",\"password\":\"admin123\",\"name\":\"Admin User\",\"role\":\"ADMIN\"}"
+```
+
+**Method 2: Using Prisma Studio**
+1. Run `npx prisma studio` (if not already running)
+2. Navigate to `Admin` collection
+3. Click "Add record"
+4. Fill in:
+   - `email`: `admin@cuet.ac.bd`
+   - `name`: `Admin User`
+   - `password`: (generate hash using command below)
+   - `createdAt`: Current date/time
+   - `updatedAt`: Current date/time
+
+**Generate password hash:**
+```bash
+node -e "const bcrypt = require('bcryptjs'); bcrypt.hash('admin123', 12).then(hash => console.log(hash))"
+```
+
+### Step 8: Start the Development Server
+
+Run the Next.js development server:
+
+```bash
+npm run dev
+```
+
+**Expected output:**
+```
+▲ Next.js 14.0.4
+- Local:        http://localhost:3000
+- Ready in 2.3s
+```
+
+### Step 9: Access the Application
+
+1. **Open your web browser**
+2. **Navigate to:** `http://localhost:3000`
+3. **You should see:** The home page of the IoT Tokenless Dining Management System
+
+### Step 10: Verify Installation
+
+1. **Test Login** (if you created an admin account):
+   - Go to `http://localhost:3000/login`
+   - Use credentials from Step 7
+   - You should be redirected to the admin dashboard
+
+2. **Test Database Connection**:
+   - Open Prisma Studio: `npx prisma studio`
+   - Verify collections are created and accessible
+
+3. **Test API Endpoints**:
+   - Visit `http://localhost:3000/api/auth/me` (should return authentication error if not logged in, which is expected)
+
+### Step 11: (Optional) Create Test Accounts
+
+For testing different user roles, create additional accounts:
+
+**Create Manager Account:**
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"manager@cuet.ac.bd\",\"password\":\"manager123\",\"name\":\"Manager User\",\"role\":\"MANAGER\"}"
+```
+
+**Create Student Account:**
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"student@cuet.ac.bd\",\"password\":\"student123\",\"name\":\"Student User\",\"studentId\":\"CUET-2024-001\",\"role\":\"STUDENT\"}"
+```
+
+### Step 12: (Optional) Set Up Face Recognition Service
+
+If you want to test face recognition features:
+
+1. **Navigate to hardware directory:**
+   ```bash
+   cd hardware
+   ```
+
+2. **Create Python virtual environment:**
+   ```bash
+   # Windows
+   python -m venv venv
+   venv\Scripts\activate
+
+   # Mac/Linux
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install Python dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Run face recognition service:**
+   ```bash
+   python face_recognition_insightface.py
+   ```
+
+5. **Add to `.env` file:**
+   ```env
+   FACE_RECOGNITION_SERVICE_URL=http://localhost:5000
+   ```
+
+### ✅ Success Checklist
+
+After completing all steps, you should have:
+
+- ✅ Node.js and npm installed and verified
+- ✅ Project dependencies installed (`node_modules` folder exists)
+- ✅ MongoDB Atlas cluster created and accessible
+- ✅ `.env` file configured with database URL and JWT secret
+- ✅ Database schema initialized (collections created)
+- ✅ At least one admin account created
+- ✅ Development server running on `http://localhost:3000`
+- ✅ Application accessible in browser
+- ✅ (Optional) Face recognition service running
+
+### 🎯 Next Steps
+
+- Explore the [User Guide](#user-guide) to understand different user roles
+- Review [API Documentation](#api-documentation) for integration
+- Check [Hardware Integration](#hardware-integration) for IoT device setup
+- Read [DOCUMENTATION.md](DOCUMENTATION.md) for deep technical details
+
+---
 
 ## 🚀 Prerequisites
 
@@ -87,14 +367,28 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🗄️ MongoDB Atlas Configuration
 
-### Connection Details
+### Setting Up Your Own MongoDB Atlas Cluster
 
-**MongoDB Atlas Cluster:**
-- **Cluster Name**: sagexdb
-- **Connection String**: `mongodb+srv://ratulhasan_db_user:gP0r2ZiT7zRtBRqa@sagexdb.kt3uupv.mongodb.net/iot_dining?retryWrites=true&w=majority&appName=sagexdb`
-- **Database Name**: `iot_dining`
-- **Username**: `ratulhasan_db_user`
-- **Password**: `gP0r2ZiT7zRtBRqa`
+**Important:** For security and best practices, create your own MongoDB Atlas cluster. The connection details below are examples - replace them with your own credentials.
+
+### Connection Details Format
+
+Your connection string should follow this format:
+```
+mongodb+srv://<username>:<password>@<cluster-name>.<cluster-id>.mongodb.net/<database-name>?retryWrites=true&w=majority
+```
+
+**Example Structure:**
+- **Database Name**: `iot_dining` (recommended)
+- **Username**: Your MongoDB Atlas database user
+- **Password**: Your MongoDB Atlas database user password
+- **Cluster**: Your MongoDB Atlas cluster name
+
+### Quick Setup Guide
+
+1. **Create Cluster**: Follow Step 4 in the [Step-by-Step Local Execution Guide](#-step-by-step-local-execution-guide)
+2. **Get Connection String**: Copy from MongoDB Atlas "Connect" → "Connect your application"
+3. **Update `.env`**: Paste your connection string in the `DATABASE_URL` variable
 
 ### Database Collections
 
@@ -122,11 +416,16 @@ Create a `.env` file in the project root with the following content:
 
 ```env
 # MongoDB Atlas Connection String
-DATABASE_URL="mongodb+srv://ratulhasan_db_user:gP0r2ZiT7zRtBRqa@sagexdb.kt3uupv.mongodb.net/iot_dining?retryWrites=true&w=majority&appName=sagexdb"
+# Replace with your own MongoDB Atlas connection string
+# Format: mongodb+srv://username:password@cluster.mongodb.net/iot_dining?retryWrites=true&w=majority
+DATABASE_URL="mongodb+srv://your_username:your_password@your_cluster.mongodb.net/iot_dining?retryWrites=true&w=majority"
 
-# JWT Secret Key (CHANGE THIS IN PRODUCTION!)
-# Generate a strong random string (minimum 32 characters)
+# JWT Secret Key (REQUIRED - Generate a secure random string)
+# Minimum 32 characters - use the command below to generate one
 JWT_SECRET="your-super-secret-jwt-key-minimum-32-characters-long-change-in-production"
+
+# Optional: Face Recognition Service URL (if using face recognition features)
+# FACE_RECOGNITION_SERVICE_URL="http://localhost:5000"
 ```
 
 **⚠️ IMPORTANT**: 
@@ -817,6 +1116,49 @@ This project is developed for CUET IoT SageX competition.
 
 - Developed for IoT SageX Competition
 - CUET - Chittagong University of Engineering & Technology
+
+## 🌐 Making the Repository Public
+
+This repository is designed to be public-friendly. To make it publicly accessible:
+
+1. **Remove Sensitive Information**:
+   - Ensure `.env` is in `.gitignore` (already included)
+   - Never commit database credentials or JWT secrets
+   - Review all files for hardcoded credentials before pushing
+
+2. **GitHub Repository Setup**:
+   ```bash
+   # Initialize git (if not already done)
+   git init
+   
+   # Add all files (except those in .gitignore)
+   git add .
+   
+   # Commit changes
+   git commit -m "Initial commit: IoT Tokenless Dining Management System"
+   
+   # Create repository on GitHub, then:
+   git remote add origin https://github.com/yourusername/iot_sagex.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+3. **Repository Settings**:
+   - Go to GitHub repository → Settings → General
+   - Scroll to "Danger Zone"
+   - Click "Change visibility" → "Make public"
+
+4. **Update Documentation**:
+   - Replace any example credentials with placeholders
+   - Add contribution guidelines if needed
+   - Update README with repository URL
+
+**Security Checklist Before Going Public:**
+- ✅ `.env` file is in `.gitignore`
+- ✅ No hardcoded passwords or API keys in code
+- ✅ Database connection strings use environment variables
+- ✅ JWT secrets are not committed
+- ✅ All sensitive data removed from commit history
 
 ## 📞 Support
 
