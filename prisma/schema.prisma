@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  STUDENT
+}
+
+enum MealStatus {
+  PENDING
+  APPROVED
+  DENIED
+  COMPLETED
+}
+
+enum TokenStatus {
+  ACTIVE
+  USED
+  EXPIRED
+}
+
+// Admin users - separate collection
+model Admin {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  email         String    @unique
+  name          String
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@map("Admin")
+}
+
+// Manager users - separate collection
+model Manager {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  email         String    @unique
+  name          String
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@map("Manager")
+}
+
+// Student users - separate collection
+model Student {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  studentId     String    @unique
+  email         String    @unique
+  name          String
+  password      String
+  department    String?
+  photo         String?
+  idCard        String?
+  idCardNumber  String?   @unique
+  faceId        String?   @unique
+  pin           String?
+  enrolledAt    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  tokens        Token[]
+  mealRecords   MealRecord[]
+  enrollments   Enrollment[]
+  
+  @@map("Student")
+}
+
+model Token {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String      @db.ObjectId
+  tokenNumber   String      @unique
+  status        TokenStatus @default(ACTIVE)
+  purchasedAt   DateTime    @default(now())
+  expiresAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  student       Student     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealRecords   MealRecord[]
+}
+
+model MealPlan {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  description   String?
+  price         Float
+  mealCount     Int
+  durationDays  Int
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  enrollments   Enrollment[]
+}
+
+model Enrollment {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String      @db.ObjectId
+  mealPlanId    String      @db.ObjectId
+  startDate     DateTime    @default(now())
+  endDate       DateTime
+  mealsRemaining Int
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  student       Student     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealPlan      MealPlan    @relation(fields: [mealPlanId], references: [id])
+  mealRecords   MealRecord[]
+}
+
+model MealRecord {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String      @db.ObjectId
+  tokenId       String?     @db.ObjectId
+  enrollmentId  String?     @db.ObjectId
+  status        MealStatus @default(PENDING)
+  requestedAt   DateTime   @default(now())
+  approvedAt    DateTime?
+  approvedBy    String?     @db.ObjectId
+  deniedReason  String?
+  completedAt   DateTime?
+  verificationMethod String // "FACE", "ID_CARD", "PIN", "MANUAL"
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  
+  student       Student    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token         Token?     @relation(fields: [tokenId], references: [id])
+  enrollment    Enrollment? @relation(fields: [enrollmentId], references: [id])
+}
+
+model SystemConfig {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  key           String      @unique
+  value         String
+  description   String?
+  updatedAt     DateTime    @updatedAt
+  updatedBy     String?     @db.ObjectId
+}
+
